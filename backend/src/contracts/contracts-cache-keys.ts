@@ -1,0 +1,3 @@
+export const CONTRACTS_LIST_CACHE_KEY = 'contracts:list';
+export const CONTRACTS_SUMMARY_CACHE_KEY = 'contracts:summary';
+export const CONTRACTS_CACHE_KEYS = [CONTRACTS_LIST_CACHE_KEY, CONTRACTS_SUMMARY_CACHE_KEY];
