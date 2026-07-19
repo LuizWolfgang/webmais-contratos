@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContractStatus {
+  ATIVO
+  VENCIDO
+  ENCERRADO
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Client {
+  id        String     @id @default(uuid())
+  name      String
+  document  String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  contracts Contract[]
+
+  @@index([name])
+  @@map("clients")
+}
+
+model Contract {
+  id        String         @id @default(uuid())
+  number    String         @unique
+  clientId  String
+  client    Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  value     Decimal        @db.Decimal(12, 2)
+  dueDate   DateTime
+  status    ContractStatus @default(ATIVO)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([status, dueDate])
+  @@index([clientId])
+  @@map("contracts")
+}
