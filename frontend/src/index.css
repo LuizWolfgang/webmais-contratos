@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-brand: #f2653c;
+  --color-brand-dark: #d94f28;
+  --color-navy: #0f172a;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900 font-sans antialiased;
+}
