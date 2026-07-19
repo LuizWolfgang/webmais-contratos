@@ -70,6 +70,69 @@ services:
       kafka:
         condition: service_healthy
 
+  api:
+    build: ./backend
+    container_name: webmais-api
+    restart: unless-stopped
+    profiles: ["full"]
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao}
+      JWT_EXPIRES_IN: 8h
+      DATABASE_URL: postgresql://webmais:webmais@postgres:5432/webmais_contratos?schema=public
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: 60
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: webmais-contratos
+      KAFKA_TOPIC_CONTRACTS_EXPIRED: contracts.expired
+      KAFKA_CONSUMER_GROUP: contracts-expiration-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  worker:
+    build: ./backend
+    container_name: webmais-worker
+    restart: unless-stopped
+    profiles: ["full"]
+    command: ["node", "dist/worker.main.js"]
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo-em-producao}
+      DATABASE_URL: postgresql://webmais:webmais@postgres:5432/webmais_contratos?schema=public
+      REDIS_URL: redis://redis:6379
+      CACHE_TTL_SECONDS: 60
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: webmais-contratos
+      KAFKA_TOPIC_CONTRACTS_EXPIRED: contracts.expired
+      KAFKA_CONSUMER_GROUP: contracts-expiration-worker
+      EXPIRATION_SCHEDULER_INTERVAL_MS: 15000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3001
+    container_name: webmais-web
+    restart: unless-stopped
+    profiles: ["full"]
+    ports:
+      - "8081:80"
+    depends_on:
+      - api
+
 volumes:
   pg-data:
   kafka-data:
