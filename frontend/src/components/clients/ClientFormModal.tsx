@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import toast from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
+import { extractErrorMessage } from '../../services/api';
 import type { Client, ClientInput } from '../../types/client';
 
 const inputClasses =
@@ -22,6 +24,8 @@ export function ClientFormModal({ initialClient, onClose, onSubmit }: ClientForm
     try {
       await onSubmit({ name, document });
       onClose();
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }

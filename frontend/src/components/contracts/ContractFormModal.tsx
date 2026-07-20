@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import toast from 'react-hot-toast';
 import { Modal } from '../ui/Modal';
+import { extractErrorMessage } from '../../services/api';
 import type { Client } from '../../types/client';
 import type { Contract, ContractInput } from '../../types/contract';
 
@@ -35,6 +37,8 @@ export function ContractFormModal({
     try {
       await onSubmit({ number, clientId, value: Number(value), dueDate });
       onClose();
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
