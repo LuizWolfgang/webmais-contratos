@@ -2,6 +2,13 @@
 
 Módulo de Gestão de Contratos — desafio técnico para processo seletivo da WebMais. Cadastro de contratos vinculados a clientes, com controle de status (Ativo / Vencido / Encerrado) atualizado automaticamente por um pipeline assíncrono baseado em Kafka.
 
+## Deploy (bônus)
+
+Aplicação completa hospedada no [Railway](https://railway.com/) (Postgres, Redis, Kafka, API, worker e frontend, cada um como serviço independente):
+
+- **Frontend**: https://web-production-9b989.up.railway.app (login `admin` / `admin123`)
+- **API**: https://api-production-876a.up.railway.app
+
 ## Stack
 
 - **Backend**: Node.js + TypeScript, [NestJS](https://nestjs.com/), REST API
