@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
-import { validateEnv } from '../shared/config/env';
+import { validateWorkerEnv } from '../shared/config/env';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 import { ContractsModule } from '../contracts/contracts.module';
@@ -14,7 +14,7 @@ import { ContractExpiredConsumer } from './contract-expired.consumer';
 // Processo worker: é o único que fala com o Kafka (producer no scan, consumer no update).
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateWorkerEnv }),
     LoggerModule.forRoot({
       pinoHttp: {
         transport:
