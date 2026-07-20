@@ -89,7 +89,7 @@ O backend segue **Clean Architecture / DDD leve** dentro da estrutura de módulo
 
 `domain` não depende de nada externo; `application` depende só de `domain`; `infrastructure` implementa as portas declaradas em `domain`; `interfaces` é a borda HTTP. O container de DI do NestJS faz o papel de composition root, injetando as implementações concretas nos use-cases via tokens (`@Inject(CONTRACT_REPOSITORY)` etc.).
 
-Módulos de infraestrutura compartilhada: `prisma/` (client), `redis/` (cache-aside), `kafka/` (client, criação idempotente de tópico, publisher de eventos) e `worker/` (processo separado que roda o scheduler de expiração e o consumer Kafka).
+Módulos de infraestrutura compartilhada: `prisma/` (client), `redis/` (cache-aside), `kafka/` (client, criação idempotente de tópico, publisher de eventos) e `worker/` (processo separado que roda o scheduler de expiração e o consumer Kafka). A API (`main.ts`) e o worker (`worker.main.ts`) são **dois entrypoints independentes** sobre o mesmo código: a API expõe o REST e não conhece Kafka; o worker roda o pipeline assíncrono e não expõe HTTP.
 
 ### Regra de negócio de status
 
@@ -110,6 +110,12 @@ O enunciado aceita explicitamente substituir BullMQ por Kafka como diferencial (
 Client usado: [`@confluentinc/kafka-javascript`](https://github.com/confluentinc/confluent-kafka-javascript) (mantido ativamente pela Confluent, wrapper sobre `librdkafka` com API compatível com `kafkajs`) — `kafkajs` está sem manutenção desde 2023.
 
 Optou-se por um único mecanismo (scheduler periódico), em vez de também disparar a checagem na consulta da listagem: o enunciado aceita qualquer uma das duas abordagens, e um único caminho é mais simples de testar e não acopla o `GET /contracts` a efeitos colaterais de escrita.
+
+**Por que esse desenho é confiável (e por que não precisa de outbox):** o scheduler consulta a fonte da verdade (Postgres) a cada ciclo. Se o Kafka estiver fora, uma mensagem se perder, ou o consumer cair no meio do processamento, o próximo ciclo simplesmente **re-detecta e re-publica** os contratos que continuam `ATIVO` e vencidos. Combinado com o consumer idempotente, isso entrega semântica *at-least-once* fim a fim **sem** precisar do padrão transactional outbox — a reconciliação é intrínseca ao polling da fonte da verdade. É uma troca consciente: assume-se uma latência de até um intervalo do scheduler em favor de simplicidade e resiliência.
+
+**Separação de processos:** a API REST (`main.ts`) depende apenas de Postgres e Redis — **não** importa o módulo de Kafka e sobe normalmente mesmo com o broker indisponível. Todo o contato com o Kafka (producer no scan, consumer no update, criação do tópico) vive exclusivamente no processo `worker` (`worker.main.ts`). Isso mantém o caminho de request HTTP desacoplado da mensageria e permite escalar/deployar API e worker de forma independente.
+
+**Onde o Kafka agrega valor aqui:** além de cumprir o diferencial pedido, o tópico `contracts.expired` é um ponto de extensão natural — novos consumers (notificação por e-mail, trilha de auditoria, atualização de read models) podem reagir ao mesmo evento sem tocar no código de detecção. Para o volume deste desafio, um `UPDATE` direto no scheduler resolveria; o barramento de eventos é o que abre espaço para esse crescimento e é o que a troca por Kafka/RabbitMQ no enunciado busca exercitar.
 
 ### Cache Redis
 
