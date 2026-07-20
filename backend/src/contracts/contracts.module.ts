@@ -7,15 +7,14 @@ import { CloseContractUseCase } from './application/use-cases/close-contract.use
 import { ListContractsUseCase } from './application/use-cases/list-contracts.use-case';
 import { GetContractsSummaryUseCase } from './application/use-cases/get-contracts-summary.use-case';
 import { GetContractUseCase } from './application/use-cases/get-contract.use-case';
-import { ScanOverdueContractsUseCase } from './application/use-cases/scan-overdue-contracts.use-case';
-import { MarkContractExpiredUseCase } from './application/use-cases/mark-contract-expired.use-case';
 import { CONTRACT_REPOSITORY } from './domain/contract.repository';
 import { ContractPrismaRepository } from './infrastructure/contract.prisma-repository';
 import { ClientsModule } from '../clients/clients.module';
-import { KafkaModule } from '../kafka/kafka.module';
 
+// Módulo da API REST: só depende de Postgres, Redis e Clients — sem Kafka.
+// Os casos de uso assíncronos (scan/mark de vencimento) vivem no WorkerModule.
 @Module({
-  imports: [ClientsModule, KafkaModule],
+  imports: [ClientsModule],
   controllers: [ContractsController],
   providers: [
     { provide: CONTRACT_REPOSITORY, useClass: ContractPrismaRepository },
@@ -26,9 +25,7 @@ import { KafkaModule } from '../kafka/kafka.module';
     ListContractsUseCase,
     GetContractsSummaryUseCase,
     GetContractUseCase,
-    ScanOverdueContractsUseCase,
-    MarkContractExpiredUseCase,
   ],
-  exports: [ScanOverdueContractsUseCase, MarkContractExpiredUseCase],
+  exports: [CONTRACT_REPOSITORY],
 })
 export class ContractsModule {}

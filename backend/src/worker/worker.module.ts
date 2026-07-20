@@ -6,9 +6,12 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../redis/redis.module';
 import { ContractsModule } from '../contracts/contracts.module';
 import { KafkaModule } from '../kafka/kafka.module';
+import { ScanOverdueContractsUseCase } from '../contracts/application/use-cases/scan-overdue-contracts.use-case';
+import { MarkContractExpiredUseCase } from '../contracts/application/use-cases/mark-contract-expired.use-case';
 import { ExpirationSchedulerProvider } from './expiration-scheduler.provider';
 import { ContractExpiredConsumer } from './contract-expired.consumer';
 
+// Processo worker: é o único que fala com o Kafka (producer no scan, consumer no update).
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
@@ -25,6 +28,11 @@ import { ContractExpiredConsumer } from './contract-expired.consumer';
     ContractsModule,
     KafkaModule,
   ],
-  providers: [ExpirationSchedulerProvider, ContractExpiredConsumer],
+  providers: [
+    ScanOverdueContractsUseCase,
+    MarkContractExpiredUseCase,
+    ExpirationSchedulerProvider,
+    ContractExpiredConsumer,
+  ],
 })
 export class WorkerModule {}
