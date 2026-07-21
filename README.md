@@ -124,7 +124,7 @@ npm run start:worker
 
 O Worker garante a criação do tópico `contracts.expired`, executa periodicamente a verificação de contratos vencidos (15 segundos por padrão) e processa os eventos publicados para atualizar o status dos contratos.
 
-> Requer Node 20.19+, 22.12+ ou 24+. O Prisma 6 não possui suporte para versões ímpares do Node (21 e 23). O projeto inclui um `.nvmrc` para facilitar a configuração.
+> Testado com Node 20, 22 e 23 sem problemas. O projeto inclui um `.nvmrc` (Node 22) caso prefira fixar uma versão.
 
 ---
 
