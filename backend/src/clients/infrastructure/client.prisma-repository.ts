@@ -66,6 +66,15 @@ export class ClientPrismaRepository implements ClientRepository {
         return new ConflictError('Já existe um cliente com este documento');
       }
     }
+    // onDelete: Restrict chega como erro "unknown" com o código bruto do Postgres (23001), sem virar P2003.
+    if (this.isForeignKeyRestrictError(err)) {
+      return new ConflictError('Não é possível excluir cliente com contratos vinculados');
+    }
     return err;
+  }
+
+  private isForeignKeyRestrictError(err: unknown): boolean {
+    const message = err instanceof Error ? err.message : '';
+    return /foreign key constraint|violates restrict/i.test(message);
   }
 }
