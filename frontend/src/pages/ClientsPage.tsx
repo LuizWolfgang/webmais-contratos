@@ -2,18 +2,14 @@ import { useState } from 'react';
 import { useClients } from '../hooks/useClients';
 import { ClientsTable } from '../components/clients/ClientsTable';
 import { ClientFormModal } from '../components/clients/ClientFormModal';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import type { Client } from '../types/client';
 
 export function ClientsPage() {
   const { clients, isLoading, create, update, remove } = useClients();
   const [editingClient, setEditingClient] = useState<Client | undefined>();
   const [isCreating, setIsCreating] = useState(false);
-
-  function handleDelete(client: Client) {
-    if (window.confirm(`Excluir o cliente ${client.name}?`)) {
-      remove(client.id);
-    }
-  }
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
 
   const showModal = isCreating || !!editingClient;
 
@@ -32,7 +28,7 @@ export function ClientsPage() {
       {isLoading ? (
         <p className="text-sm text-gray-500">Carregando clientes...</p>
       ) : (
-        <ClientsTable clients={clients} onEdit={setEditingClient} onDelete={handleDelete} />
+        <ClientsTable clients={clients} onEdit={setEditingClient} onDelete={setDeletingClient} />
       )}
 
       {showModal && (
@@ -43,6 +39,17 @@ export function ClientsPage() {
             setEditingClient(undefined);
           }}
           onSubmit={(input) => (editingClient ? update(editingClient.id, input) : create(input))}
+        />
+      )}
+
+      {deletingClient && (
+        <ConfirmDialog
+          title="Excluir cliente"
+          message={`Tem certeza que deseja excluir o cliente ${deletingClient.name}? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          variant="danger"
+          onConfirm={() => remove(deletingClient.id)}
+          onCancel={() => setDeletingClient(null)}
         />
       )}
     </div>

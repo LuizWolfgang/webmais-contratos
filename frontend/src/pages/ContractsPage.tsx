@@ -4,25 +4,17 @@ import { useClients } from '../hooks/useClients';
 import { SummaryCards } from '../components/contracts/SummaryCards';
 import { ContractsTable } from '../components/contracts/ContractsTable';
 import { ContractFormModal } from '../components/contracts/ContractFormModal';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import type { Contract } from '../types/contract';
+
+type PendingAction = { type: 'delete' | 'close'; contract: Contract };
 
 export function ContractsPage() {
   const { contracts, summary, isLoading, create, update, remove, close } = useContracts();
   const { clients } = useClients();
   const [editingContract, setEditingContract] = useState<Contract | undefined>();
   const [isCreating, setIsCreating] = useState(false);
-
-  function handleDelete(contract: Contract) {
-    if (window.confirm(`Excluir o contrato ${contract.number}?`)) {
-      remove(contract.id);
-    }
-  }
-
-  function handleClose(contract: Contract) {
-    if (window.confirm(`Encerrar o contrato ${contract.number}?`)) {
-      close(contract.id);
-    }
-  }
+  const [pending, setPending] = useState<PendingAction | null>(null);
 
   const showModal = isCreating || !!editingContract;
 
@@ -46,8 +38,8 @@ export function ContractsPage() {
         <ContractsTable
           contracts={contracts}
           onEdit={setEditingContract}
-          onDelete={handleDelete}
-          onClose={handleClose}
+          onDelete={(contract) => setPending({ type: 'delete', contract })}
+          onClose={(contract) => setPending({ type: 'close', contract })}
         />
       )}
 
@@ -60,6 +52,28 @@ export function ContractsPage() {
             setEditingContract(undefined);
           }}
           onSubmit={(input) => (editingContract ? update(editingContract.id, input) : create(input))}
+        />
+      )}
+
+      {pending?.type === 'delete' && (
+        <ConfirmDialog
+          title="Excluir contrato"
+          message={`Tem certeza que deseja excluir o contrato ${pending.contract.number}? Esta ação não pode ser desfeita.`}
+          confirmLabel="Excluir"
+          variant="danger"
+          onConfirm={() => remove(pending.contract.id)}
+          onCancel={() => setPending(null)}
+        />
+      )}
+
+      {pending?.type === 'close' && (
+        <ConfirmDialog
+          title="Encerrar contrato"
+          message={`Deseja encerrar o contrato ${pending.contract.number}? Ele deixará de ficar ativo.`}
+          confirmLabel="Encerrar"
+          variant="brand"
+          onConfirm={() => close(pending.contract.id)}
+          onCancel={() => setPending(null)}
         />
       )}
     </div>
